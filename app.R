@@ -12,7 +12,7 @@ library(proto)
 library(lubridate)
 library(ggplot2)
 library(tidyr)
-alpay <- readRDS("alpay.RDS")
+alpay <- readRDS("alpay.RDS") ## This is the dictionary file
 duygu <- function(dosya) {
     text <- pdf_text(pdf = dosya)
     text <- paste(text,collapse = " ")
