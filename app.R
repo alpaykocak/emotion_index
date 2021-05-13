@@ -89,7 +89,7 @@ duygu <- function(dosya) {
     rm(emotions,emotion,x,y,text,dosya)
     return(results)
     incProgress(1/(length(inFile$datapath)), detail = paste0("Progressed a document"))
-    Sys.sleep(5)  
+    Sys.sleep(1)  
     }
     )
 }
@@ -249,9 +249,9 @@ server <- function(input, output,session) {
                     extensions = 'Buttons',
                     rownames= FALSE,
                     options = list(
-                        pageLength = 15,
+                        pageLength = 12,
                         paging = TRUE,
-                        searching = TRUE,
+                        searching = F,
                         fixedColumns = FALSE,
                         autoWidth = FALSE,
                         ordering = TRUE,
@@ -275,9 +275,9 @@ server <- function(input, output,session) {
                    extensions = 'Buttons',
                    rownames= FALSE,
                    options = list(
-                       pageLength = 15,
+                       pageLength = 12,
                        paging = TRUE,
-                       searching = TRUE,
+                       searching = F,
                        fixedColumns = FALSE,
                        autoWidth = FALSE,
                        ordering = TRUE,
