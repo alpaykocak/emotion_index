@@ -11,7 +11,7 @@ library(gsubfn)
 library(proto)
 library(lubridate)
 library(ggplot2)
-library(tidyr)
+library(tidyr) 
 alpay <- readRDS("alpay.RDS") ## This is the dictionary file filtered positive negative
 duygu <- function(dosya) {
     text <- pdf_text(pdf = dosya)
