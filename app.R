@@ -80,8 +80,8 @@ duygu <- function(dosya) {
                           "Raw uncertainty Ratio"  =emotions$ave_emotion[7],
                           "anticipation Index" = index_fun(y$emotion_type[1]),
                           "fear Index" = index_fun(y$emotion_type[2]),
-                          "negativity Index" = index_fun(y$emotion_type[3]),
-                          "positivity Index" = index_fun(y$emotion_type[4]),
+                          "negative Index" = index_fun(y$emotion_type[3]),
+                          "positive Index" = index_fun(y$emotion_type[4]),
                           "surprise Index" = index_fun(y$emotion_type[5]),
                           "trust Index" = index_fun(y$emotion_type[6]),
                           "uncertainty Index" = index_fun(y$emotion_type[7]))
@@ -118,13 +118,30 @@ ui <- dashboardPage(
         width = 250,
         sidebarMenu(
             menuItem("Main page", tabName = "anasayfa", icon = icon("igloo")),
-            menuItem("Documents", icon = icon("th"),
-                     # Input directly under menuItem
+                        menuItem("Central Banks", icon = icon("money-bill-wave"),expandedName = "Here, you can find the results CB's MPC statements.",startExpanded = T,
+                     # fileInput("file1", "Please upload file(s) in pdf format", accept = ".pdf",multiple = T),
+                     # actionButton(inputId="grafikyap","Run"),
+                     menuItem("Results", tabName = "sonuclar_cb", icon = icon("book-open"),
+                              menuItem("FED", tabName = "sonuclar_cb_fed", icon = icon("book-open")),
+                              menuItem("ECB", tabName = "sonuclar_cb_ecb", icon = icon("book-open")),
+                              menuItem("CBRT", tabName = "sonuclar_cb_cbrt", icon = icon("book-open"))
+                              ),
+                     menuItem("Time Series", tabName = "zamanserisi_cb", icon = icon("dashboard"),
+                              menuItem("FED", tabName = "zamanserisi_cb_fed", icon = icon("book-open")),
+                              menuItem("ECB", tabName = "zamanserisi_cb_ecb", icon = icon("book-open")),
+                              menuItem("CBRT", tabName = "zamanserisi_cb_cbrt", icon = icon("book-open"))),
+                     menuItem("Graphics", tabName = "grafikler_cb", icon = icon("bar-chart-o"),
+                              menuItem("FED", tabName = "grafikler_cb_fed", icon = icon("book-open")),
+                              menuItem("ECB", tabName = "grafikler_cb_ecb", icon = icon("book-open")),
+                              menuItem("CBRT", tabName = "grafikler_cb_cbrt", icon = icon("book-open")))
+            ),
+            menuItem("Self-analysis", icon = icon("th"),expandedName = "You can make your own analysis by supplying documents.",startExpanded = T,
                      fileInput("file1", "Please upload file(s) in pdf format", accept = ".pdf",multiple = T),
-                     actionButton(inputId="grafikyap","Run")),
-            menuItem("Results", tabName = "sonuclar", icon = icon("book-open")),
-            menuItem("Time Series", tabName = "zamanserisi", icon = icon("dashboard")),
-            menuItem("Graphics", tabName = "grafikler", icon = icon("bar-chart-o"))
+                     actionButton(inputId="grafikyap","Run"),
+                     menuSubItem("Results", tabName = "sonuclar", icon = icon("book-open")),
+                     menuSubItem("Time Series", tabName = "zamanserisi", icon = icon("dashboard")),
+                     menuSubItem("Graphics", tabName = "grafikler", icon = icon("bar-chart-o"))
+            )
         )  
     ),
     dashboardBody(
@@ -167,20 +184,83 @@ ui <- dashboardPage(
                              h2("Raw Results"),
                            selectInput(inputId = "emotions", 
                                        label = "Emotions",
-                                       choices = rates$emotion_type,
+                                       choices = rates$emotion_type,multiple = F,
                                        selected = rates$emotion_type[1],selectize = T),
-                           DT::dataTableOutput("sonuc")
+                           DT::dataTableOutput("raw")
                              )
                     ),
+            tabItem("sonuclar_cb_fed", 
+                    column(width=10,
+                           h1("Results per document"),
+                           "Source: The documents came from CB's website Method(202X)",
+                           h2("Raw Results"),
+                           selectInput(inputId = "emotions_cb_fed", 
+                                       label = "Emotions",
+                                       choices = rates$emotion_type,multiple = F,
+                                       selected = rates$emotion_type[1],selectize = T),
+                           DT::dataTableOutput("raw_cb_fed")
+                    )
+            ),
+            tabItem("sonuclar_cb_cbrt", 
+                    column(width=10,
+                           h1("Results per document"),
+                           "Source: The documents came from CB's website Method(202X)",
+                           h2("Raw Results"),
+                           selectInput(inputId = "emotions_cb_cbrt", 
+                                       label = "Emotions",
+                                       choices = rates$emotion_type,multiple = F,
+                                       selected = rates$emotion_type[1],selectize = T),
+                           DT::dataTableOutput("raw_cb_cbrt")
+                    )
+            ),
+            tabItem("sonuclar_cb_ecb", 
+                    column(width=10,
+                           h1("Results per document"),
+                           "Source: The documents came from CB's website Method(202X)",
+                           h2("Raw Results"),
+                           selectInput(inputId = "emotions_cb_ecb", 
+                                       label = "Emotions",
+                                       choices = rates$emotion_type,multiple = F,
+                                       selected = rates$emotion_type[1],selectize = T),
+                           DT::dataTableOutput("raw_cb_ecb")
+                    )
+            ),
             tabItem("zamanserisi", 
                     column(width=10,
                            h1("Results per time indicated"),
                            "Source: The documents that you uploaded. Method(202X)",
                            h2("Emotions time series"),
-                           DT::dataTableOutput("sonuc2")
+                           DT::dataTableOutput("timeseries")
                            
                     )
                     ),
+            tabItem("zamanserisi_cb_fed", 
+                    column(width=10,
+                           h1("Results per time indicated"),
+                           "Source: The documents came from CB's website Method(202X)",
+                           h2("Emotions time series"),
+                           DT::dataTableOutput("timeseries_cb_fed")
+                           
+                    )
+            ),
+            tabItem("zamanserisi_cb_cbrt", 
+                    column(width=10,
+                           h1("Results per time indicated"),
+                           "Source: The documents came from CB's website Method(202X)",
+                           h2("Emotions time series"),
+                           DT::dataTableOutput("timeseries_cb_cbrt")
+                           
+                    )
+            ),
+            tabItem("zamanserisi_cb_ecb", 
+                    column(width=10,
+                           h1("Results per time indicated"),
+                           "Source: The documents came from CB's website Method(202X)",
+                           h2("Emotions time series"),
+                           DT::dataTableOutput("timeseries_cb_ecb")
+                           
+                    )
+            ),
             tabItem("grafikler", 
                     fluidRow(width=20,
                              box(
@@ -189,6 +269,33 @@ ui <- dashboardPage(
                                  plotOutput("graph")
                              )
                              )
+            ),
+            tabItem("grafikler_cb_fed", 
+                    fluidRow(width=20,
+                             box(
+                                 width = 5, status = "info", solidHeader = TRUE,footer = "Source: The documents came from CB's website Method(202X)",
+                                 title = "Time Series Graphs of Emotions",
+                                 plotOutput("graph_cb_fed")
+                             )
+                    )
+            ),
+            tabItem("grafikler_cb_cbrt", 
+                    fluidRow(width=20,
+                             box(
+                                 width = 5, status = "info", solidHeader = TRUE,footer = "Source: The documents came from CB's website Method(202X)",
+                                 title = "Time Series Graphs of Emotions",
+                                 plotOutput("graph_cb_cbrt")
+                             )
+                    )
+            ),
+            tabItem("grafikler_cb_ecb", 
+                    fluidRow(width=20,
+                             box(
+                                 width = 5, status = "info", solidHeader = TRUE,footer = "Source: The documents came from CB's website Method(202X)",
+                                 title = "Time Series Graphs of Emotions",
+                                 plotOutput("graph_cb_ecb")
+                             )
+                    )
             )
         )
     )
@@ -231,8 +338,8 @@ server <- function(input, output,session) {
                     summarise_all(max)
                 d4 <- d4  %>%
                     dplyr::select(YEAR,MONTH, anticipation.Index, fear.Index,
-                                  negativity.Index,
-                                  positivity.Index,
+                                  negative.Index,
+                                  positive.Index,
                                   surprise.Index,
                                   trust.Index,
                                   uncertainty.Index)
@@ -242,13 +349,14 @@ server <- function(input, output,session) {
             
 
             
-           output$sonuc <- DT::renderDataTable({
+           output$raw <- DT::renderDataTable({
                 DT::datatable(
                     {d %>% select("Document.Name", "Document.Name.Date.Estimated","Total.Word.Count", contains(input$emotions))},
                     caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
                     extensions = 'Buttons',
                     rownames= FALSE,
                     options = list(
+                        scrollX = TRUE,
                         pageLength = 12,
                         paging = TRUE,
                         searching = F,
@@ -263,7 +371,7 @@ server <- function(input, output,session) {
                 ) 
             })
            
-           output$sonuc2 <- 
+           output$timeseries <- 
                
                if (is.null(d4)) {NULL} else {
                
@@ -275,6 +383,7 @@ server <- function(input, output,session) {
                    extensions = 'Buttons',
                    rownames= FALSE,
                    options = list(
+                       scrollX = TRUE,
                        pageLength = 12,
                        paging = TRUE,
                        searching = F,
@@ -290,8 +399,8 @@ server <- function(input, output,session) {
                    formatRound(columns=c(
                        "anticipation.Index",
                        "fear.Index",
-                       "negativity.Index",
-                       "positivity.Index",
+                       "negative.Index",
+                       "positive.Index",
                        "surprise.Index",
                        "trust.Index",
                        "uncertainty.Index"), digits=3)
@@ -313,8 +422,210 @@ server <- function(input, output,session) {
                     labs(x="Document Time", y="uncertainty.Index")
                 })} else {NULL}
     })
+   
     
-}
+    # drop_download(path = "/CBTEXTSFOLDER/Results/data_cb_fed.RDS",overwrite = T)
+    data_cb_fed <- readRDS("data_cb_fed.RDS")
+    
+    output$raw_cb_fed <- DT::renderDataTable({
+        DT::datatable(
+            {data_cb_fed %>% select("Document.Name", "Document.Name.Date.Estimated","Total.Word.Count", contains(input$emotions_cb_fed))},
+            caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
+            extensions = 'Buttons',
+            rownames= FALSE,
+            options = list(
+                scrollX = TRUE,
+                pageLength = 12,
+                paging = TRUE,
+                searching = F,
+                fixedColumns = FALSE,
+                autoWidth = FALSE,
+                ordering = TRUE,
+                dom = 'ftpBRSQ',
+                buttons = c('copy', 'csv', 'excel')
+            ),
+            
+            class = "display"
+        ) 
+    })
+    
+    # drop_download(path = "/CBTEXTSFOLDER/Results/data_cb4_fed.RDS",overwrite = T)
+    data_cb4_fed <- readRDS("data_cb4_fed.RDS")
+    
+    output$timeseries_cb_fed <- DT::renderDataTable({
+        DT::datatable(
+                    { data_cb4_fed },
+                    caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
+                    extensions = 'Buttons',
+                    rownames= FALSE,
+                    options = list(
+                        scrollX = TRUE,
+                        pageLength = 12,
+                        paging = TRUE,
+                        searching = F,
+                        fixedColumns = FALSE,
+                        autoWidth = FALSE,
+                        ordering = TRUE,
+                        dom = 'ftpBRSQ',
+                        buttons = c('copy', 'csv', 'excel')
+                    ),
+                    
+                    class = "display"
+                ) %>%
+                    formatRound(columns=c(
+                        "anticipation.Index",
+                        "fear.Index",
+                        "negative.Index",
+                        "positive.Index",
+                        "surprise.Index",
+                        "trust.Index",
+                        "uncertainty.Index"), digits=3)
+            })
+        
+    output$graph_cb_fed <- renderPlot({
+        data_cb5_fed <- data_cb4_fed %>% ungroup() %>% 
+                    mutate(Date = ymd(paste0(YEAR,"-",MONTH,"-","01"))) %>% 
+                    select(-YEAR,-MONTH) %>% gather("type", "data",-Date)
+                ggplot(data_cb5_fed,aes(Date,data)) + geom_line() + facet_grid(type~.) +
+                    labs(x="Document Time", y="uncertainty.Index")
+            })
+
+    # drop_download(path = "/CBTEXTSFOLDER/Results/data_cb_fed.RDS",overwrite = T)
+    data_cb_cbrt <- readRDS("data_cb_cbrt.RDS")
+    
+    output$raw_cb_cbrt <- DT::renderDataTable({
+        DT::datatable(
+            {data_cb_cbrt %>% select("Document.Name", "Document.Name.Date.Estimated","Total.Word.Count", contains(input$emotions_cb_cbrt))},
+            caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
+            extensions = 'Buttons',
+            rownames= FALSE,
+            options = list(
+                scrollX = TRUE,
+                pageLength = 12,
+                paging = TRUE,
+                searching = F,
+                fixedColumns = FALSE,
+                autoWidth = FALSE,
+                ordering = TRUE,
+                dom = 'ftpBRSQ',
+                buttons = c('copy', 'csv', 'excel')
+            ),
+            
+            class = "display"
+        ) 
+    })
+    
+    # drop_download(path = "/CBTEXTSFOLDER/Results/data_cb4_fed.RDS",overwrite = T)
+    data_cb4_cbrt <- readRDS("data_cb4_cbrt.RDS")
+    
+    output$timeseries_cb_cbrt<- DT::renderDataTable({
+        DT::datatable(
+            { data_cb4_cbrt },
+            caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
+            extensions = 'Buttons',
+            rownames= FALSE,
+            options = list(
+                scrollX = TRUE,
+                pageLength = 12,
+                paging = TRUE,
+                searching = F,
+                fixedColumns = FALSE,
+                autoWidth = FALSE,
+                ordering = TRUE,
+                dom = 'ftpBRSQ',
+                buttons = c('copy', 'csv', 'excel')
+            ),
+            
+            class = "display"
+        ) %>%
+            formatRound(columns=c(
+                "anticipation.Index",
+                "fear.Index",
+                "negative.Index",
+                "positive.Index",
+                "surprise.Index",
+                "trust.Index",
+                "uncertainty.Index"), digits=3)
+    })
+    
+    output$graph_cb_cbrt<- renderPlot({
+        data_cb5_cbrt <- data_cb4_cbrt %>% ungroup() %>% 
+            mutate(Date = ymd(paste0(YEAR,"-",MONTH,"-","01"))) %>% 
+            select(-YEAR,-MONTH) %>% gather("type", "data",-Date)
+        ggplot(data_cb5_cbrt,aes(Date,data)) + geom_line() + facet_grid(type~.) +
+            labs(x="Document Time", y="uncertainty.Index")
+    })
+    
+    
+    # drop_download(path = "/CBTEXTSFOLDER/Results/data_cb_fed.RDS",overwrite = T)
+    data_cb_ecb <- readRDS("data_cb_ecb.RDS")
+    
+    output$raw_cb_ecb <- DT::renderDataTable({
+        DT::datatable(
+            {data_cb_ecb %>% select("Document.Name", "Document.Name.Date.Estimated","Total.Word.Count", contains(input$emotions_cb_ecb))},
+            caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
+            extensions = 'Buttons',
+            rownames= FALSE,
+            options = list(
+                scrollX = TRUE,
+                pageLength = 12,
+                paging = TRUE,
+                searching = F,
+                fixedColumns = FALSE,
+                autoWidth = FALSE,
+                ordering = TRUE,
+                dom = 'ftpBRSQ',
+                buttons = c('copy', 'csv', 'excel')
+            ),
+            
+            class = "display"
+        ) 
+    })
+    
+    # drop_download(path = "/CBTEXTSFOLDER/Results/data_cb4_fed.RDS",overwrite = T)
+    data_cb4_ecb <- readRDS("data_cb4_ecb.RDS")
+    
+    output$timeseries_cb_ecb <- DT::renderDataTable({
+        DT::datatable(
+            { data_cb4_ecb },
+            caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
+            extensions = 'Buttons',
+            rownames= FALSE,
+            options = list(
+                scrollX = TRUE,
+                pageLength = 12,
+                paging = TRUE,
+                searching = F,
+                fixedColumns = FALSE,
+                autoWidth = FALSE,
+                ordering = TRUE,
+                dom = 'ftpBRSQ',
+                buttons = c('copy', 'csv', 'excel')
+            ),
+            
+            class = "display"
+        ) %>%
+            formatRound(columns=c(
+                "anticipation.Index",
+                "fear.Index",
+                "negative.Index",
+                "positive.Index",
+                "surprise.Index",
+                "trust.Index",
+                "uncertainty.Index"), digits=3)
+    })
+    
+    output$graph_cb_ecb <- renderPlot({
+        data_cb5_ecb <- data_cb4_ecb %>% ungroup() %>% 
+            mutate(Date = ymd(paste0(YEAR,"-",MONTH,"-","01"))) %>% 
+            select(-YEAR,-MONTH) %>% gather("type", "data",-Date)
+        ggplot(data_cb5_ecb,aes(Date,data)) + geom_line() + facet_grid(type~.) +
+            labs(x="Document Time", y="uncertainty.Index")
+    })
+    
+    
+    
+    }
 
 
 shinyApp(ui = ui, server = server)
