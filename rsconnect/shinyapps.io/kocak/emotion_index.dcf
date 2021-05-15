@@ -5,9 +5,9 @@ account: kocak
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3987374
-bundleId: 4595136
+bundleId: 4600618
 url: https://kocak.shinyapps.io/emotion_index/
-when: 1620928119.25929
+when: 1621058331.33149
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: 20210511.pdf|alpay.R|sozluk.xlsx
+ignoredFiles: .httr-oauth|20210511.pdf|alpay.R|link_data.R|links.txt|README.md|remote_analysis.R|sozluk.xlsx
