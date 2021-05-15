@@ -13,6 +13,7 @@ library(lubridate)
 library(ggplot2)
 library(tidyr) 
 library(shinydashboard)
+library(plotly)
 alpay <- readRDS("alpay.RDS") 
 rates <- data.frame("emotion_type" = c("anticipation","fear", "negative", "positive", "surprise", "trust", "uncertainty"),
                      "min" = rep(0,7),
@@ -121,16 +122,16 @@ ui <- dashboardPage(
                         menuItem("Central Banks", icon = icon("money-bill-wave"),expandedName = "Here, you can find the results CB's MPC statements.",startExpanded = T,
                      # fileInput("file1", "Please upload file(s) in pdf format", accept = ".pdf",multiple = T),
                      # actionButton(inputId="grafikyap","Run"),
-                     menuItem("Results", tabName = "sonuclar_cb", icon = icon("book-open"),
+                     menuItem("Results", tabName = "sonuclar_cb", icon = icon("book-open"),startExpanded = T,
                               menuItem("FED", tabName = "sonuclar_cb_fed", icon = icon("book-open")),
                               menuItem("ECB", tabName = "sonuclar_cb_ecb", icon = icon("book-open")),
                               menuItem("CBRT", tabName = "sonuclar_cb_cbrt", icon = icon("book-open"))
                               ),
-                     menuItem("Time Series", tabName = "zamanserisi_cb", icon = icon("dashboard"),
+                     menuItem("Time Series", tabName = "zamanserisi_cb", icon = icon("dashboard"),startExpanded = T,
                               menuItem("FED", tabName = "zamanserisi_cb_fed", icon = icon("book-open")),
                               menuItem("ECB", tabName = "zamanserisi_cb_ecb", icon = icon("book-open")),
                               menuItem("CBRT", tabName = "zamanserisi_cb_cbrt", icon = icon("book-open"))),
-                     menuItem("Graphics", tabName = "grafikler_cb", icon = icon("bar-chart-o"),
+                     menuItem("Graphics", tabName = "grafikler_cb", icon = icon("bar-chart-o"),startExpanded = T,
                               menuItem("FED", tabName = "grafikler_cb_fed", icon = icon("book-open")),
                               menuItem("ECB", tabName = "grafikler_cb_ecb", icon = icon("book-open")),
                               menuItem("CBRT", tabName = "grafikler_cb_cbrt", icon = icon("book-open")))
@@ -186,7 +187,7 @@ ui <- dashboardPage(
                                        label = "Emotions",
                                        choices = rates$emotion_type,multiple = F,
                                        selected = rates$emotion_type[1],selectize = T),
-                           DT::dataTableOutput("raw")
+                           DT::dataTableOutput("raw",width = 1500,height = 250)
                              )
                     ),
             tabItem("sonuclar_cb_fed", 
@@ -198,7 +199,7 @@ ui <- dashboardPage(
                                        label = "Emotions",
                                        choices = rates$emotion_type,multiple = F,
                                        selected = rates$emotion_type[1],selectize = T),
-                           DT::dataTableOutput("raw_cb_fed")
+                           DT::dataTableOutput("raw_cb_fed",width = 1500,height = 250)
                     )
             ),
             tabItem("sonuclar_cb_cbrt", 
@@ -210,7 +211,7 @@ ui <- dashboardPage(
                                        label = "Emotions",
                                        choices = rates$emotion_type,multiple = F,
                                        selected = rates$emotion_type[1],selectize = T),
-                           DT::dataTableOutput("raw_cb_cbrt")
+                           DT::dataTableOutput("raw_cb_cbrt",width = 1500,height = 250)
                     )
             ),
             tabItem("sonuclar_cb_ecb", 
@@ -222,7 +223,7 @@ ui <- dashboardPage(
                                        label = "Emotions",
                                        choices = rates$emotion_type,multiple = F,
                                        selected = rates$emotion_type[1],selectize = T),
-                           DT::dataTableOutput("raw_cb_ecb")
+                           DT::dataTableOutput("raw_cb_ecb",width = 1500,height = 250)
                     )
             ),
             tabItem("zamanserisi", 
@@ -230,7 +231,7 @@ ui <- dashboardPage(
                            h1("Results per time indicated"),
                            "Source: The documents that you uploaded. Method(202X)",
                            h2("Emotions time series"),
-                           DT::dataTableOutput("timeseries")
+                           DT::dataTableOutput("timeseries",width = 1500,height = 250)
                            
                     )
                     ),
@@ -239,7 +240,7 @@ ui <- dashboardPage(
                            h1("Results per time indicated"),
                            "Source: The documents came from CB's website Method(202X)",
                            h2("Emotions time series"),
-                           DT::dataTableOutput("timeseries_cb_fed")
+                           DT::dataTableOutput("timeseries_cb_fed",width = 1500,height = 250)
                            
                     )
             ),
@@ -248,7 +249,7 @@ ui <- dashboardPage(
                            h1("Results per time indicated"),
                            "Source: The documents came from CB's website Method(202X)",
                            h2("Emotions time series"),
-                           DT::dataTableOutput("timeseries_cb_cbrt")
+                           DT::dataTableOutput("timeseries_cb_cbrt",width = 1500,height = 250)
                            
                     )
             ),
@@ -257,44 +258,48 @@ ui <- dashboardPage(
                            h1("Results per time indicated"),
                            "Source: The documents came from CB's website Method(202X)",
                            h2("Emotions time series"),
-                           DT::dataTableOutput("timeseries_cb_ecb")
+                           DT::dataTableOutput("timeseries_cb_ecb",width = 1500,height = 250)
                            
                     )
             ),
             tabItem("grafikler", 
-                    fluidRow(width=20,
-                             box(
-                                 width = 5, status = "info", solidHeader = TRUE,footer = "Source: The documents that you uploaded.",
-                                 title = "Time Series Graphs of Emotions",
-                                 plotOutput("graph")
-                             )
-                             )
+                    br(),
+                    h1("Graphs per emotion"),
+                    "Source: The documents came from CB's website Method(202X)",
+                    h2("Time Series Graphs"),
+                    br(),
+                    column(width=10,
+                           plotlyOutput("graph")
+                    )
             ),
             tabItem("grafikler_cb_fed", 
-                    fluidRow(width=20,
-                             box(
-                                 width = 5, status = "info", solidHeader = TRUE,footer = "Source: The documents came from CB's website Method(202X)",
-                                 title = "Time Series Graphs of Emotions",
-                                 plotOutput("graph_cb_fed")
-                             )
+                    br(),
+                    h1("Graphs per emotion"),
+                    "Source: The documents came from CB's website Method(202X)",
+                    h2("Time Series Graphs"),
+                    br(),
+                    column(width=10,
+                           plotlyOutput("graph_cb_fed")
                     )
             ),
             tabItem("grafikler_cb_cbrt", 
-                    fluidRow(width=20,
-                             box(
-                                 width = 5, status = "info", solidHeader = TRUE,footer = "Source: The documents came from CB's website Method(202X)",
-                                 title = "Time Series Graphs of Emotions",
-                                 plotOutput("graph_cb_cbrt")
-                             )
+                    br(),
+                    h1("Graphs per emotion"),
+                    "Source: The documents came from CB's website Method(202X)",
+                    h2("Time Series Graphs"),
+                    br(),
+                    column(width=10,
+                           plotlyOutput("graph_cb_cbrt")
                     )
             ),
             tabItem("grafikler_cb_ecb", 
-                    fluidRow(width=20,
-                             box(
-                                 width = 5, status = "info", solidHeader = TRUE,footer = "Source: The documents came from CB's website Method(202X)",
-                                 title = "Time Series Graphs of Emotions",
-                                 plotOutput("graph_cb_ecb")
-                             )
+                    br(),
+                    h1("Graphs per emotion"),
+                    "Source: The documents came from CB's website Method(202X)",
+                    h2("Time Series Graphs"),
+                    br(),
+                    column(width=10,
+                             plotlyOutput("graph_cb_ecb")
                     )
             )
         )
@@ -353,11 +358,15 @@ server <- function(input, output,session) {
                 DT::datatable(
                     {d %>% select("Document.Name", "Document.Name.Date.Estimated","Total.Word.Count", contains(input$emotions))},
                     caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
-                    extensions = 'Buttons',
+                    extensions = c('Buttons','Scroller'),
                     rownames= FALSE,
                     options = list(
+                        deferRender = TRUE,
+                        scrollY = 200,
+                        scroller = TRUE,
+                        lengthMenu = c(10, 25, 50, 100),
                         scrollX = TRUE,
-                        pageLength = 12,
+                        pageLength = 1000,
                         paging = TRUE,
                         searching = F,
                         fixedColumns = FALSE,
@@ -380,11 +389,15 @@ server <- function(input, output,session) {
                DT::datatable(
                    { d4 },
                    caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
-                   extensions = 'Buttons',
+                   extensions = c('Buttons','Scroller'),
                    rownames= FALSE,
                    options = list(
+                       deferRender = TRUE,
+                       scrollY = 200,
+                       scroller = TRUE,
+                       lengthMenu = c(10, 25, 50, 100),
                        scrollX = TRUE,
-                       pageLength = 12,
+                       pageLength = 1000,
                        paging = TRUE,
                        searching = F,
                        fixedColumns = FALSE,
@@ -414,12 +427,13 @@ server <- function(input, output,session) {
                 
                 
                 if (nrow(inFile)>1 & kk == FALSE) {
-                renderPlot({
+                renderPlotly({
                 d5 <- d4 %>% ungroup() %>% 
                     mutate(Date = ymd(paste0(YEAR,"-",MONTH,"-","01"))) %>% 
                     select(-YEAR,-MONTH) %>% gather("type", "data",-Date)
-                ggplot(d5,aes(Date,data)) + geom_line() + facet_grid(type~.) +
+                p <- ggplot(d5,aes(Date,data)) + geom_line() + facet_wrap(type~.) +
                     labs(x="Document Time", y="uncertainty.Index")
+                ggplotly(p)
                 })} else {NULL}
     })
    
@@ -431,11 +445,15 @@ server <- function(input, output,session) {
         DT::datatable(
             {data_cb_fed %>% select("Document.Name", "Document.Name.Date.Estimated","Total.Word.Count", contains(input$emotions_cb_fed))},
             caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
-            extensions = 'Buttons',
+            extensions = c('Buttons','Scroller'),
             rownames= FALSE,
             options = list(
+                deferRender = TRUE,
+                scrollY = 200,
+                scroller = TRUE,
+                lengthMenu = c(10, 25, 50, 100),
                 scrollX = TRUE,
-                pageLength = 12,
+                pageLength = 1000,
                 paging = TRUE,
                 searching = F,
                 fixedColumns = FALSE,
@@ -456,11 +474,15 @@ server <- function(input, output,session) {
         DT::datatable(
                     { data_cb4_fed },
                     caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
-                    extensions = 'Buttons',
+                    extensions = c('Buttons','Scroller'),
                     rownames= FALSE,
                     options = list(
+                        deferRender = TRUE,
+                        scrollY = 200,
+                        scroller = TRUE,
+                        lengthMenu = c(10, 25, 50, 100),
                         scrollX = TRUE,
-                        pageLength = 12,
+                        pageLength = 1000,
                         paging = TRUE,
                         searching = F,
                         fixedColumns = FALSE,
@@ -482,12 +504,13 @@ server <- function(input, output,session) {
                         "uncertainty.Index"), digits=3)
             })
         
-    output$graph_cb_fed <- renderPlot({
+    output$graph_cb_fed <- renderPlotly({
         data_cb5_fed <- data_cb4_fed %>% ungroup() %>% 
                     mutate(Date = ymd(paste0(YEAR,"-",MONTH,"-","01"))) %>% 
                     select(-YEAR,-MONTH) %>% gather("type", "data",-Date)
-                ggplot(data_cb5_fed,aes(Date,data)) + geom_line() + facet_grid(type~.) +
+               p <- ggplot(data_cb5_fed,aes(Date,data)) + geom_line() + facet_wrap(type~.) +
                     labs(x="Document Time", y="uncertainty.Index")
+               ggplotly(p)
             })
 
     # drop_download(path = "/CBTEXTSFOLDER/Results/data_cb_fed.RDS",overwrite = T)
@@ -497,11 +520,15 @@ server <- function(input, output,session) {
         DT::datatable(
             {data_cb_cbrt %>% select("Document.Name", "Document.Name.Date.Estimated","Total.Word.Count", contains(input$emotions_cb_cbrt))},
             caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
-            extensions = 'Buttons',
+            extensions = c('Buttons','Scroller'),
             rownames= FALSE,
             options = list(
+                deferRender = TRUE,
+                scrollY = 200,
+                scroller = TRUE,
+                lengthMenu = c(10, 25, 50, 100),
                 scrollX = TRUE,
-                pageLength = 12,
+                pageLength = 1000,
                 paging = TRUE,
                 searching = F,
                 fixedColumns = FALSE,
@@ -522,11 +549,15 @@ server <- function(input, output,session) {
         DT::datatable(
             { data_cb4_cbrt },
             caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
-            extensions = 'Buttons',
+            extensions = c('Buttons','Scroller'),
             rownames= FALSE,
             options = list(
+                deferRender = TRUE,
+                scrollY = 200,
+                scroller = TRUE,
+                lengthMenu = c(10, 25, 50, 100),
                 scrollX = TRUE,
-                pageLength = 12,
+                pageLength = 1000,
                 paging = TRUE,
                 searching = F,
                 fixedColumns = FALSE,
@@ -548,12 +579,13 @@ server <- function(input, output,session) {
                 "uncertainty.Index"), digits=3)
     })
     
-    output$graph_cb_cbrt<- renderPlot({
+    output$graph_cb_cbrt<- renderPlotly({
         data_cb5_cbrt <- data_cb4_cbrt %>% ungroup() %>% 
             mutate(Date = ymd(paste0(YEAR,"-",MONTH,"-","01"))) %>% 
             select(-YEAR,-MONTH) %>% gather("type", "data",-Date)
-        ggplot(data_cb5_cbrt,aes(Date,data)) + geom_line() + facet_grid(type~.) +
+       p <- ggplot(data_cb5_cbrt,aes(Date,data)) + geom_line() + facet_wrap(type~.) +
             labs(x="Document Time", y="uncertainty.Index")
+       ggplotly(p)
     })
     
     
@@ -564,11 +596,15 @@ server <- function(input, output,session) {
         DT::datatable(
             {data_cb_ecb %>% select("Document.Name", "Document.Name.Date.Estimated","Total.Word.Count", contains(input$emotions_cb_ecb))},
             caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
-            extensions = 'Buttons',
+            extensions = c('Buttons','Scroller'),
             rownames= FALSE,
             options = list(
+                deferRender = TRUE,
+                scrollY = 200,
+                scroller = TRUE,
+                lengthMenu = c(10, 25, 50, 100),
                 scrollX = TRUE,
-                pageLength = 12,
+                pageLength = 1000,
                 paging = TRUE,
                 searching = F,
                 fixedColumns = FALSE,
@@ -589,11 +625,15 @@ server <- function(input, output,session) {
         DT::datatable(
             { data_cb4_ecb },
             caption = paste0("Selected document(s) are analyzed to obtain emotion indicators."),  
-            extensions = 'Buttons',
+            extensions = c('Buttons','Scroller'),
             rownames= FALSE,
             options = list(
+                deferRender = TRUE,
+                scrollY = 200,
+                scroller = TRUE,
+                lengthMenu = c(10, 25, 50, 100),
                 scrollX = TRUE,
-                pageLength = 12,
+                pageLength = 1000,
                 paging = TRUE,
                 searching = F,
                 fixedColumns = FALSE,
@@ -615,12 +655,13 @@ server <- function(input, output,session) {
                 "uncertainty.Index"), digits=3)
     })
     
-    output$graph_cb_ecb <- renderPlot({
+    output$graph_cb_ecb <- renderPlotly({
         data_cb5_ecb <- data_cb4_ecb %>% ungroup() %>% 
             mutate(Date = ymd(paste0(YEAR,"-",MONTH,"-","01"))) %>% 
             select(-YEAR,-MONTH) %>% gather("type", "data",-Date)
-        ggplot(data_cb5_ecb,aes(Date,data)) + geom_line() + facet_grid(type~.) +
+        p <- ggplot(data_cb5_ecb,aes(Date,data)) + geom_line() + facet_wrap(type~.) +
             labs(x="Document Time", y="uncertainty.Index")
+        ggplotly(p)
     })
     
     
