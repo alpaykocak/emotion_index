@@ -14,6 +14,9 @@ library(ggplot2)
 library(tidyr) 
 library(shinydashboard)
 library(plotly)
+library(mailR)
+library(shinymanager)
+
 alpay <- readRDS("alpay.RDS") 
 rates <- data.frame("emotion_type" = c("anticipation","fear", "negative", "positive", "surprise", "trust", "uncertainty"),
                      "min" = rep(0,7),
@@ -21,7 +24,6 @@ rates <- data.frame("emotion_type" = c("anticipation","fear", "negative", "posit
                      "mean" = c(0.02,0.02,0.04689535,0.07893328,0.01,0.02,0.01))
 duygu <- function(dosya) {
     withProgress(message = 'Processing...', value = 10, {
-    
     text <- pdf_text(pdf = dosya)
     text <- paste(text,collapse = " ")
     removeends <- function(x) gsub("\n","",x)
@@ -112,8 +114,42 @@ fill_NA <- function(x) {
     return(l)
 }
 
+set_labels(
+    language = "en",
+    "Please authenticate" = "Lütfen kullanıcı adı ve şifre ile giriş yapınız.",
+    "Username:" = "Kullanıcı adı:",
+    "Password:" = "Şifre:",
+    "Login" = "Giriş" 
+)
 
-ui <- dashboardPage(
+inactivity <- "function idleTimer() {
+var t = setTimeout(logout, 120000);
+window.onmousemove = resetTimer; // catches mouse movements
+window.onmousedown = resetTimer; // catches mouse movements
+window.onclick = resetTimer;     // catches mouse clicks
+window.onscroll = resetTimer;    // catches scrolling
+window.onkeypress = resetTimer;  //catches keyboard actions
+
+function logout() {
+window.close();  //close the window
+}
+
+function resetTimer() {
+clearTimeout(t);
+t = setTimeout(logout, 120000);  // time is in milliseconds (1000 is 1 second)
+}
+}
+idleTimer();"
+
+credentials <- data.frame(user = c("admin", "user"),
+                          password = c("1234", "1"),
+                          # comment = c("alsace", "auvergne", "bretagne"), %>%
+                          stringsAsFactors = FALSE)
+
+ui <- secure_app(head_auth = tags$script(inactivity),
+                 background  = "linear-gradient(rgba(0, 0, 255, 0.5),
+rgba(255, 255, 0, 0.5)), url('https://bohatala.com/wp-content/uploads/2018/01/Central-Banks.jpg') ",
+                 dashboardPage(
     dashboardHeader(title = "Emotion Index Calculator for Monetary Policy Documents",titleWidth = 750),
     dashboardSidebar(
         width = 250,
@@ -143,12 +179,19 @@ ui <- dashboardPage(
                      menuSubItem("Time Series", tabName = "zamanserisi", icon = icon("dashboard")),
                      menuSubItem("Graphics", tabName = "grafikler", icon = icon("bar-chart-o"))
             )
+            ,
+            menuItem("Comment (Admin Mode)", icon = icon("book-open"),expandedName = "You can make your own analysis by supplying documents.",startExpanded = T,
+                     textAreaInput("commentuser", "Please write comments"),
+                     tags$div(style="display:inline-block",title="Only server mode",actionButton("sendemail", "Send"))
+            )
         )  
     ),
     dashboardBody(
         tabItems(
             tabItem("anasayfa",
                     fluidRow(
+                        # result of authentication
+                        
                         box(status = "info",width = 4,
                             h1("Emotion Index Calculator"),
                             p("The study can be accessed at https://dergipark.org.tr/en/pub/bddkdergisi/issue/58352/841216 
@@ -176,6 +219,9 @@ ui <- dashboardPage(
                             p("There exists a consensus in the literature that the monetary policies of central banks are related to each other symmetrically or asymmetrically (Throop (1994), Siklos and Wohar (1997), Bec, Salem, and Collard (2002)). For instance, Bec, Salem, and Collard (2002) examines non-linear taylor-type monetary reaction functions for US, France and Germany. The authors suggest a model framework which allows one country’s interest rate may have a role in other country’s reaction function which data covers the years between 1982 and 1997. They use Generalized Method of Moments estimation method to estimate threshold models. The study concludes that the inter-related monetary reaction functions for the US, Germany and France can be represented by non-linear models.")
                             )
                         
+                    ),
+                    fluidRow(
+                        strong(textOutput("user_name"))
                     )
             ),
             tabItem("sonuclar", 
@@ -306,9 +352,49 @@ ui <- dashboardPage(
     )
             
 )
-
+)
 
 server <- function(input, output,session) {
+    
+    result_auth <- secure_server(check_credentials = check_credentials(credentials))
+    
+    # output$res_auth <- renderPrint({
+    #     reactiveValuesToList(result_auth)
+    # })
+    
+    user_data <- reactive({
+        result_auth$user
+    })
+    
+    output$user_name <- renderText({
+        paste0("The user currently logged in is: ", user_data())
+    })
+    
+    posta <- function(text) {
+        send.mail(from = "alpaykocak@hacettepe.edu.tr",
+                  to = "kocakalpay@gmail.com",
+                  subject = "Comments",
+                  body = as.character(text),
+                  smtp = list(host.name = "mail.hacettepe.edu.tr", port = 465, 
+                              user.name = "alpaykocak",            
+                              passwd = "Nn1234567", ssl = TRUE), 
+                  authenticate = TRUE,
+                  send = TRUE)
+    }
+    
+    observeEvent(input$sendemail, {
+        if (user_data() == "admin") {
+        withProgress(message = 'PROCESSING...', value = 0, {
+            incProgress(9/10)
+            posta(input$commentuser)
+            Sys.sleep(1)        
+            })
+        } else {showModal(modalDialog(
+            title = "Important message",
+            "Only for admin use!"
+        ))}
+        
+    })
     
     observeEvent(input$grafikyap,{
             inFile <<- input$file1
@@ -431,7 +517,7 @@ server <- function(input, output,session) {
                 d5 <- d4 %>% ungroup() %>% 
                     mutate(Date = ymd(paste0(YEAR,"-",MONTH,"-","01"))) %>% 
                     select(-YEAR,-MONTH) %>% gather("type", "data",-Date)
-                p <- ggplot(d5,aes(Date,data)) + geom_line() + facet_wrap(type~.) +
+                p <- ggplot(d5,aes(Date,data)) + geom_line() + facet_wrap(type~., scales="free") +
                     labs(x="Document Time", y="uncertainty.Index")
                 ggplotly(p)
                 })} else {NULL}
@@ -508,7 +594,7 @@ server <- function(input, output,session) {
         data_cb5_fed <- data_cb4_fed %>% ungroup() %>% 
                     mutate(Date = ymd(paste0(YEAR,"-",MONTH,"-","01"))) %>% 
                     select(-YEAR,-MONTH) %>% gather("type", "data",-Date)
-               p <- ggplot(data_cb5_fed,aes(Date,data)) + geom_line() + facet_wrap(type~.) +
+               p <- ggplot(data_cb5_fed,aes(Date,data)) + geom_line() + facet_wrap(type~., scales="free") +
                     labs(x="Document Time", y="uncertainty.Index")
                ggplotly(p)
             })
@@ -583,7 +669,7 @@ server <- function(input, output,session) {
         data_cb5_cbrt <- data_cb4_cbrt %>% ungroup() %>% 
             mutate(Date = ymd(paste0(YEAR,"-",MONTH,"-","01"))) %>% 
             select(-YEAR,-MONTH) %>% gather("type", "data",-Date)
-       p <- ggplot(data_cb5_cbrt,aes(Date,data)) + geom_line() + facet_wrap(type~.) +
+       p <- ggplot(data_cb5_cbrt,aes(Date,data)) + geom_line() + facet_wrap(type~., scales="free") +
             labs(x="Document Time", y="uncertainty.Index")
        ggplotly(p)
     })
@@ -659,7 +745,7 @@ server <- function(input, output,session) {
         data_cb5_ecb <- data_cb4_ecb %>% ungroup() %>% 
             mutate(Date = ymd(paste0(YEAR,"-",MONTH,"-","01"))) %>% 
             select(-YEAR,-MONTH) %>% gather("type", "data",-Date)
-        p <- ggplot(data_cb5_ecb,aes(Date,data)) + geom_line() + facet_wrap(type~.) +
+        p <- ggplot(data_cb5_ecb,aes(Date,data)) + geom_line() + facet_wrap(type~., scales="free") +
             labs(x="Document Time", y="uncertainty.Index")
         ggplotly(p)
     })

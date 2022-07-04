@@ -9,7 +9,7 @@ library(tidyr)
 library(gsubfn)
 library(proto)
 library(lubridate)
-
+library(mFilter)
 outputDir <- "CBTEXTSFOLDER"
 filesInfo <- drop_dir(outputDir)
 filePath <- as.character(filesInfo[filesInfo$name == "FOMC", "path_display"])
@@ -35,7 +35,8 @@ fill_NA <- function(x) {
   diffs <- diff(which.na)
   l <- c()
   for (i in 1:length(values)) {
-    v <- seq(values[i], 0, length.out = diffs[i])
+    # v <- seq(values[i], 0, length.out = diffs[i])
+    v <- seq(values[i], values[i], length.out = diffs[i])
     l <- c(l,v)
   }
   return(l)
@@ -47,16 +48,21 @@ rates <- data.frame("emotion_type" = c("anticipation","fear", "negative", "posit
 duygusal <- function(dosya) {
     text <- pdf_text(pdf = dosya)
     text <- paste(text,collapse = " ")
-    removeends <- function(x) gsub("\n","",x)
-    removeSpecialChars <- function(x) gsub("[^a-zA-Z ]","",x)
+    removeends <- function(x) gsub("\n"," ",x)
+    removeSpecialChars <- function(x) gsub("[^a-zA-Z. ]"," ",x)
+    removevoting <- function(x) if (str_detect(x,"federal open market committee") == TRUE) {
+      gsub("\\voting.*"," ",x)
+    } else {
+        x}    
     text <- text %>% 
       removeends() %>% 
       tolower() %>% 
       removeSpecialChars() %>% 
       stripWhitespace() %>% 
+      removevoting() %>% 
       PlainTextDocument
     text <- text$content
-    rm(removeends,removeSpecialChars)
+    rm(removeends,removeSpecialChars,removevoting)
     emotion <- text %>%
       get_sentences() %>%
       emotion_by(emotion_dt = alpay)
@@ -137,7 +143,17 @@ data_cb4 <- data_cb4  %>%
                 positive.Index,
                 surprise.Index,
                 trust.Index,
-                uncertainty.Index)
+                uncertainty.Index) %>% 
+  ungroup() %>%
+  select(-YEAR,-MONTH) %>%
+  as.ts() %>%
+  apply(., 2, function(x) {l = hpfilter(c(x),freq=12,type="frequency",drift=F)
+  l = l$trend
+  return(l)}
+  ) %>%
+  as_tibble() %>%
+  cbind(data_cb4[,c(1,2)],.) %>%
+  ungroup()
 saveRDS(object = data_cb,"data_cb_fed.RDS")
 saveRDS(object = data_cb4,"data_cb4_fed.RDS")
 drop_upload(file = "data_cb_fed.RDS", path = "/CBTEXTSFOLDER/Results", mode = "overwrite")
@@ -155,7 +171,7 @@ library(tidyr)
 library(gsubfn)
 library(proto)
 library(lubridate)
-
+library(mFilter)
 outputDir <- "CBTEXTSFOLDER"
 filesInfo <- drop_dir(outputDir)
 filePath <- as.character(filesInfo[filesInfo$name == "MPC2", "path_display"])
@@ -181,7 +197,8 @@ fill_NA <- function(x) {
   diffs <- diff(which.na)
   l <- c()
   for (i in 1:length(values)) {
-    v <- seq(values[i], 0, length.out = diffs[i])
+    # v <- seq(values[i], 0, length.out = diffs[i])
+    v <- seq(values[i], values[i], length.out = diffs[i])
     l <- c(l,v)
   }
   return(l)
@@ -193,13 +210,19 @@ rates <- data.frame("emotion_type" = c("anticipation","fear", "negative", "posit
 duygusal <- function(dosya) {
   text <- pdf_text(pdf = dosya)
   text <- paste(text,collapse = " ")
-  removeends <- function(x) gsub("\n","",x)
-  removeSpecialChars <- function(x) gsub("[^a-zA-Z ]","",x)
+  removeends <- function(x) gsub("\n"," ",x)
+  removeSpecialChars <- function(x) gsub("[^a-zA-Z. ]"," ",x)
+  removevoting <- function(x) if (str_detect(x,"federal open market committee") == TRUE) {
+    gsub("\\voting.*"," ",x)
+    } else if (str_detect(x,"inflation developments") == TRUE) {
+      gsub(".*inflation developments", "", x)} else {
+        x}
   text <- text %>% 
     removeends() %>% 
     tolower() %>% 
     removeSpecialChars() %>% 
     stripWhitespace() %>% 
+    removevoting() %>%
     PlainTextDocument
   text <- text$content
   rm(removeends,removeSpecialChars)
@@ -260,7 +283,7 @@ duygusal <- function(dosya) {
   return(results)
 }
 data_cb <- as.data.frame(t(sapply(datapath, duygusal)))
-data_cb <-suppressWarnings(unnest(data_cb))
+data_cb <- suppressWarnings(unnest(data_cb))
 data_cb <- data_cb %>% 
   mutate(Document.Name.Date.Estimated = strapplyc(Document.Name, "[0-9]{8,}", simplify = TRUE)) %>%
   mutate(Document.Name.Date.Estimated  = as.Date(parse_date_time(Document.Name.Date.Estimated,c("mdy","mdY","Bdy","ymd","dmy", "bd","md","Bdh","mdYHM")))) %>%
@@ -283,7 +306,17 @@ data_cb4 <- data_cb4  %>%
                 positive.Index,
                 surprise.Index,
                 trust.Index,
-                uncertainty.Index)
+                uncertainty.Index) %>% 
+  ungroup() %>%
+  select(-YEAR,-MONTH) %>%
+  as.ts() %>%
+  apply(., 2, function(x) {l = hpfilter(c(x),freq=12,type="frequency",drift=F)
+  l = l$trend
+  return(l)}
+  ) %>%
+  as_tibble() %>%
+  cbind(data_cb4[,c(1,2)],.) %>%
+  ungroup()
 saveRDS(object = data_cb,"data_cb_cbrt.RDS")
 saveRDS(object = data_cb4,"data_cb4_cbrt.RDS")
 drop_upload(file = "data_cb_cbrt.RDS", path = "/CBTEXTSFOLDER/Results", mode = "overwrite")
@@ -304,6 +337,7 @@ library(lubridate)
 library(readr)
 library(xml2)
 library(rvest)
+library(mFilter)
 drop_upload(file = "links.txt", path = "/CBTEXTSFOLDER/ECB", mode = "overwrite")
 dir <- tempdir()
 list.files(dir)
@@ -336,7 +370,8 @@ fill_NA <- function(x) {
   diffs <- diff(which.na)
   l <- c()
   for (i in 1:length(values)) {
-    v <- seq(values[i], 0, length.out = diffs[i])
+    # v <- seq(values[i], 0, length.out = diffs[i])
+    v <- seq(values[i], values[i], length.out = diffs[i])
     l <- c(l,v)
   }
   return(l)
@@ -346,13 +381,23 @@ rates <- data.frame("emotion_type" = c("anticipation","fear", "negative", "posit
                     "max" = c(0.3,0.3,0.2309603,0.3316599,0.3,0.3,0.3),
                     "mean" = c(0.02,0.02,0.04689535,0.07893328,0.01,0.02,0.01))
 duygusal <- function(satir,dosya) {
-  removeends <- function(x) gsub("\n","",x)
-  removeSpecialChars <- function(x) gsub("[^a-zA-Z ]","",x)
+  removeends <- function(x) gsub("\n"," ",x)
+  removeSpecialChars <- function(x) gsub("[^a-zA-Z. ]"," ",x)
+  # removevoting <- function(x) if (str_detect(x,"federal open market committee") == TRUE) {
+  #   gsub("\\voting.*"," ",x)
+  # } else if (str_detect(x,"inflation developments") == TRUE) {
+  #   gsub(".*inflation developments", "", x)
+  # } else if (str_detect(x,"president of the ecb") == TRUE) {
+  #   gsub(".*transcript of the questions", "", x)
+  # } else {
+  #   x
+  # }  
   text <- satir %>% 
-    removeends() %>% 
-    tolower() %>% 
+    removeends() %>%
+    tolower() %>%
     removeSpecialChars() %>% 
     stripWhitespace() %>% 
+    # removevoting() %>%
     PlainTextDocument
   text <- text$content
   rm(removeends,removeSpecialChars)
@@ -412,7 +457,7 @@ duygusal <- function(satir,dosya) {
   rm(emotions,emotion,x,y,text,dosya)
   return(results)
 }
-data_cb <- as.data.frame(t(mapply(duygusal,ecb$satir,ecb$dosya)))
+data_cb <- as.data.frame(t(mapply(duygusal,satir = ecb$satir,dosya = ecb$dosya)))
 data_cb <- suppressWarnings(unnest(data_cb))
 data_cb <- data_cb %>% 
   mutate(Document.Name.Date.Estimated = as.Date(sub(".html$", "", Document.Name))) %>%
@@ -435,7 +480,17 @@ data_cb4 <- data_cb4  %>%
                 positive.Index,
                 surprise.Index,
                 trust.Index,
-                uncertainty.Index)
+                uncertainty.Index) %>% 
+  ungroup() %>%
+  select(-YEAR,-MONTH) %>%
+  as.ts() %>%
+  apply(., 2, function(x) {l = hpfilter(c(x),freq=12,type="frequency",drift=F)
+  l = l$trend
+  return(l)}
+  ) %>%
+  as_tibble() %>%
+  cbind(data_cb4[,c(1,2)],.) %>%
+  ungroup()
 saveRDS(object = data_cb,"data_cb_ecb.RDS")
 saveRDS(object = data_cb4,"data_cb4_ecb.RDS")
 drop_upload(file = "data_cb_ecb.RDS", path = "/CBTEXTSFOLDER/Results", mode = "overwrite")
